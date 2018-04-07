@@ -2,15 +2,14 @@ var http = require('http');
 var port = process.env.PORT || 8080;
 
 	http.createServer(function(req, res){
-		var originalUrl = req.url.slice(1);
 		
-		//shortUrl must come from a database
-		//the database will store original url with some
-		//id number that can give to this program some 
-		//type of code to generate the new url address
-		var shortUrl = "";
-	
-		
+		const originalUrl = req.url.slice(1);
+		//password comes from the database and it is stored there along with 
+		//the original url address when the last is stored  for first time
+		var password = "0950395";
+		var myHost = req.headers.host;
+		const shortUrl = `http://${myHost}/${password}`;
+
 		//validates the original url and creates a message with the response
 		var validation = /http:[/][/]www[.][a-z]+[.]com/i;
 		var isUrlValid = validation.test(originalUrl);
@@ -28,7 +27,7 @@ var port = process.env.PORT || 8080;
 		}
 	  
 		res.writeHead(200, {'Content-Type': 'text/plain'});
-		res.write(JSON.stringify(req.url));
+		res.write(JSON.stringify(myMessage));
 		res.end();
 	  
 	}).listen(port);
