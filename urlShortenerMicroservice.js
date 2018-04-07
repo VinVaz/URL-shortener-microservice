@@ -3,11 +3,13 @@ var port = process.env.PORT || 8080;
 
 	http.createServer(function(req, res){
 		var originalUrl = req.url.slice(1);
+		
 		//shortUrl must come from a database
 		var shortUrl = "";
 		
-		//a validation must be created to accept only real url
-		var isUrlValid = true;
+		//validates the original url and creates a message with the response
+		var validation = /http:[/][/]www[.][a-z]+[.]com/i;
+		var isUrlValid = validation.test(originalUrl);
 		var myMessage = {};
 		if(isUrlValid){
 			myMessage = {
