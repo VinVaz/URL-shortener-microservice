@@ -9,25 +9,26 @@ var collection = null;
 
 //*********************************************************************
 http.createServer(function(req, res){
+	res.writeHead(200, {'Content-Type': 'text/plain'});
 	
 	const myPath = req.url.slice(1);
 	const myHost = req.headers.host;
 		
 	var myMessage = {};
 	var isPasswordStored = false;
-	res.writeHead(200, {'Content-Type': 'text/plain'});
+	
 	
 	//checks if the request is an original url or 
 	//a path of some short url
-	var urlValidation = /http:[/][/]www[.][a-z]+[.]com/i;
-	var passwordValidation = /\d+/;
+	var urlValidation = /^http:[/][/]www[.][a-z]+[.]com/i;
+	var passwordValidation = /^\d+$/;
 	var isUrlValid = urlValidation.test(myPath);
 	var isPasswordValid = passwordValidation.test(myPath);
 
 	if(isPasswordValid){
-    //*********************************************************************
+     //*********************************************************************
 		var pass = myPath;
-		//OPENS MONGO CONNECTION:
+		//Opens mongo connection:
 		MongoClient.connect(dbUrl, function(err, client){
 		  
 			if(err) console.log("failed to connect with database");
@@ -60,94 +61,95 @@ http.createServer(function(req, res){
 	            res.end();
 	        });
 		});
-		//END OF MONGO CONNECTION
-    //*********************************************************************		
+		//End of mongo connection
+     //*********************************************************************		
 	}
 	else{
 		if(isUrlValid){
-		//*********************************************************************
-        //*********************************************************************			
-		var originalUrl = myPath; 
-		
-		//OPENS MONGO CONNECTION:
-		MongoClient.connect(dbUrl, function(err, client){
+			//*********************************************************************
+			//*********************************************************************			
+			var originalUrl = myPath; 
+			
+			//Opens mongo connection:
+			MongoClient.connect(dbUrl, function(err, client){
 
-		if(err) console.log("failed to connect with database");
-		const db = client.db("test")
-		const collection = db.collection("kindofurls");
-		function respond(callback){	
-			addUrlSavePassword(originalUrl, function(err, data){
-				if(err) console.log("err")
-				collection.find({original: originalUrl}).toArray(function(err, data){
-				   if(err) callback(err);
-				  
-					var password = data[0]["password"];
-					const shortUrl = `http://${myHost}/${password}`;
-					if(data.length != 0){
-						myMessage = {
-							original_url: originalUrl,
-							short_url:	shortUrl	
-						}  
-					}
-					else{
-						myMessage = {
-							ERROR: "Invalid URL address"
-						}
-					}
-					callback(null, myMessage);
-					client.close();
-				});
-			});
-		}
-		respond(function(err, data){
-		    if(err) console.log("Failed to find message");
-			res.write(JSON.stringify(data));
-			res.end();
-		});		
-        //*********************************************************************			
-		//**********************************************************************	
-		function addUrlSavePassword(url, callback){
-
-			addUrlOnceToDB(url, function(err, data){ 
-				if(err) callback(err);
-			});
-			getIdFromUrl(url, function(err, id){
-				if(err) callback(err);
-				var password = id.toString().slice(-5);
-				
-					savePasswordOnDB(url, password, function(err, data){
-						if(err) callback(err);
-						callback(err, data);
-						client.close();					
+				if(err) console.log("failed to connect with database");
+				const db = client.db("test")
+				const collection = db.collection("kindofurls");
+				function respond(callback){	
+					addUrlSavePassword(originalUrl, function(err, data){
+						if(err) console.log("err")
+						collection.find({original: originalUrl}).toArray(function(err, data){
+						   if(err) callback(err);
+						  
+							var password = data[0]["password"];
+							const shortUrl = `http://${myHost}/${password}`;
+							myMessage = {
+								original_url: originalUrl,
+								short_url:	shortUrl	
+							}  
+							callback(null, myMessage);
+							client.close();
+						});
 					});
-				});
-		}	
-		//**********************************************************************	
-		//insert original url address, only if it is not already on the database:
-		function addUrlOnceToDB(url, callback){
-			collection.updateOne({original: url}, {$set: {original: url}}, {upsert: true}, function(err, data){
-				if(err) callback(err);
-				callback(null, data);
+				}
+				respond(function(err, data){
+					if(err) console.log("Failed to find message");
+					res.write(JSON.stringify(data));
+					res.end();
+				});		
+				//*********************************************************************			
+				//**********************************************************************	
+				function addUrlSavePassword(url, callback){
+
+					addUrlOnceToDB(url, function(err, data){ 
+						if(err) callback(err);
+					});
+					getIdFromUrl(url, function(err, id){
+						if(err) callback(err);
+						var password = id.toString().slice(-5);
+						
+							savePasswordOnDB(url, password, function(err, data){
+								if(err) callback(err);
+								callback(err, data);
+								client.close();					
+							});
+						});
+				}	
+				//**********************************************************************	
+				//insert original url address, only if it is not already on the database:
+				function addUrlOnceToDB(url, callback){
+					collection.updateOne({original: url}, {$set: {original: url}}, {upsert: true}, function(err, data){
+						if(err) callback(err);
+						callback(null, data);
+					});
+				}
+				//find the _id of an url address:
+				function getIdFromUrl(url, callback){
+					collection.find({original: url}, {projection: {_id: 1}}).toArray(function(err, doc){
+						if(err) callback(err);
+						var id = doc[0]["_id"];
+						callback(null, id);
+					});
+				}
+				//puts a password key into a document
+				function savePasswordOnDB(url, pass, callback){
+					collection.updateOne({original: url}, {$set: {password: pass}}, {upsert: true}, function(err, data){
+						if(err) callback(err);
+						callback(null, data);
+					});
+				}
+				//*********************************************************************		
 			});
+			//End of mongo connection						
+	    }
+		else{
+			myMessage = {
+				ERROR: "Invalid URL address"
+			}
+		res.write(JSON.stringify(myMessage));
+		res.end();
 		}
-		//find the _id of an url address:
-		function getIdFromUrl(url, callback){
-			collection.find({original: url}, {projection: {_id: 1}}).toArray(function(err, doc){
-				if(err) callback(err);
-				var id = doc[0]["_id"];
-				callback(null, id);
-			});
-		}
-		//puts a password key into a document
-		function savePasswordOnDB(url, pass, callback){
-			collection.updateOne({original: url}, {$set: {password: pass}}, {upsert: true}, function(err, data){
-				if(err) callback(err);
-				callback(null, data);
-			});
-		}
-		//*********************************************************************		
-		});
-		//END OF MONGO CONNECTION						
 	}
 }).listen(port);
 //*********************************************************************
