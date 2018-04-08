@@ -70,7 +70,6 @@ MongoClient.connect(dbUrl, function(err, client){
 	if(err) console.log("failed to connect with database");
 	const db = client.db("test")
 	const collection = db.collection("kindofurls");
-	var password = "93842";
 	
 	//insert original url address, only if it is not already on the database:
 	function addUrlOnceToDB(url, callback){
@@ -90,6 +89,20 @@ MongoClient.connect(dbUrl, function(err, client){
 	function savePasswordOnDB(url, pass, callback){
 		collection.updateOne({original: url}, {$set: {password: pass}}, function(err, data){
 		if(err) callback(err);
+		});
+	}
+	function addUrlSavePassword(url, callback){
+		var password = "";
+		addUrlOnceToDB(url, function(err){ 
+		    if(err) callback(err);
+		});
+		getIdFromUrl(url, function(err, id){
+			if(err) callback(err);
+		    password = id.toString().slice(-5);
+			
+		});
+		savePasswordOnDB(url, password, function(err){
+			if(err) callback(err);	
 		});
 	}
 	
