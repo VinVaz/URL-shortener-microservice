@@ -12,9 +12,10 @@ http.createServer(function(req, res){
 	
 	const myPath = req.url.slice(1);
 	const myHost = req.headers.host;
-	
+		
 	var myMessage = {};
 	var isPasswordStored = false;
+	res.writeHead(200, {'Content-Type': 'text/plain'});
 	
 	//checks if the request is an original url or 
 	//a path of some short url
@@ -28,18 +29,19 @@ http.createServer(function(req, res){
 		var pass = myPath;
 		//Connect with mongo to search for a web address
 		MongoClient.connect(dbUrl, function(err, client){
-		    
+		  
 			if(err) console.log("failed to connect with database");
 		    const db = client.db("test")
 		    const collection = db.collection("kindofurls");
-		
+			
      		//find the original url address through the password:
-			collection.find({password: pass}, {projection: {original: 1, _id: 0}}).toArray(function(err, doc){
-					if(err) console.log("Failed to find url address");
+			function respond(callback){
+			    collection.find({password: pass}).toArray(function(err, doc){
+       				if(err) callback(err);
 					if(doc.length!=0){
 						var url = doc[0]["original"];
 						myMessage = {
-						    _url: url
+						    open: url
 						}
 					} 
 					else{
@@ -47,10 +49,16 @@ http.createServer(function(req, res){
 						    ERROR: "Invalid short URL address"
 						}
 					}
-					res.writeHead(200, {'Content-Type': 'text/plain'});
-					res.write(JSON.stringify(myMessage));
-					client.close();
-			});
+				callback(null, myMessage);
+			    client.close();
+			    });
+			}
+			//wrap a function to response to work asynchronously
+			respond(function(err, data){
+				if(err) console.log("Failed to find url address");
+		        res.write(JSON.stringify(data));
+	            res.end();
+	        });
 		});
 //*********************************************************************
 	}
@@ -77,9 +85,6 @@ http.createServer(function(req, res){
 			}
 		}	
 	}
-	res.writeHead(200, {'Content-Type': 'text/plain'});
-	res.write(JSON.stringify(myMessage));
-	res.end();
   
 }).listen(port);
 //*********************************************************************
