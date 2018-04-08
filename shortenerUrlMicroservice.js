@@ -63,9 +63,12 @@ http.createServer(function(req, res){
 var dbUrl = 'mongodb://localhost:27017';
 var dbName = "test"
 var collection = null;
-
+	
+var url = "www.google.com"
+	
 //connect with a database
 MongoClient.connect(dbUrl, function(err, client){
+
 	
 	if(err) console.log("failed to connect with database");
 	const db = client.db("test")
@@ -74,7 +77,8 @@ MongoClient.connect(dbUrl, function(err, client){
 	//insert original url address, only if it is not already on the database:
 	function addUrlOnceToDB(url, callback){
 		collection.updateOne({original: url}, {$set: {original: url}}, {upsert: true}, function(err, data){
-		    if(err) callback(err);
+			if(err) callback(err);
+			callback(null, data);
 	    });
 	}
 	//find the _id of an url address:
@@ -88,24 +92,28 @@ MongoClient.connect(dbUrl, function(err, client){
 	//puts a password key into a document
 	function savePasswordOnDB(url, pass, callback){
 		collection.updateOne({original: url}, {$set: {password: pass}}, function(err, data){
-		if(err) callback(err);
+			if(err) callback(err);
+			callback(null, data);
 		});
 	}
 	function addUrlSavePassword(url, callback){
-		var password = "";
-		addUrlOnceToDB(url, function(err){ 
+
+		addUrlOnceToDB(url, function(err, data){ 
 		    if(err) callback(err);
+
 		});
 		getIdFromUrl(url, function(err, id){
 			if(err) callback(err);
-		    password = id.toString().slice(-5);
+		    var password = id.toString().slice(-5);
 			
-		});
-		savePasswordOnDB(url, password, function(err){
-			if(err) callback(err);	
-		});
+			    savePasswordOnDB(url, password, function(err, data){
+			        if(err) callback(err);
+                    callback(err, data);					
+		        });
+		    });
 	}
-	
+	addUrlSavePassword(url, function(err, data){
+	});
 	//find the original url address through the password:
 	function getUrlFromPassword(pass, callback){
 		collection.find({password: pass}, {projection: {original: 1, _id: 0}}).toArray(function(err, doc){
