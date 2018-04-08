@@ -1,6 +1,12 @@
 var http = require('http');
-MongoClient = require("mongodb").MongoClient;
+var MongoClient = require("mongodb").MongoClient;
 var port = process.env.PORT || 8080;
+
+
+const dbUrl = 'mongodb://localhost:27017';
+const dbName = "test"
+var collection = null;
+
 //*********************************************************************
 http.createServer(function(req, res){
 	
@@ -8,7 +14,6 @@ http.createServer(function(req, res){
 	const myHost = req.headers.host;
 	
 	var myMessage = {};
-	var isOriginalUrlStored = false;
 	var isPasswordStored = false;
 	
 	//checks if the request is an original url or 
@@ -17,25 +22,44 @@ http.createServer(function(req, res){
 	var passwordValidation = /\d+/;
 	var isUrlValid = urlValidation.test(myPath);
 	var isPasswordValid = passwordValidation.test(myPath);
-	
+
 	if(isPasswordValid){
-		if(isPasswordStored){
-			//open the correspondent address
-			//instead of retriving the response
-		}
-		else{
-			myMessage = {
-				ERROR: "Invalid short URL address"
-			}
-		}
+//*********************************************************************
+		var pass = myPath;
+		//Connect with mongo to search for a web address
+		MongoClient.connect(dbUrl, function(err, client){
+		    
+			if(err) console.log("failed to connect with database");
+		    const db = client.db("test")
+		    const collection = db.collection("kindofurls");
+		
+     		//find the original url address through the password:
+			collection.find({password: pass}, {projection: {original: 1, _id: 0}}).toArray(function(err, doc){
+					if(err) console.log("Failed to find url address");
+					if(doc.length!=0){
+						var url = doc[0]["original"];
+						myMessage = {
+						    _url: url
+						}
+					} 
+					else{
+						myMessage = {
+						    ERROR: "Invalid short URL address"
+						}
+					}
+					res.writeHead(200, {'Content-Type': 'text/plain'});
+					res.write(JSON.stringify(myMessage));
+					client.close();
+			});
+		});
+//*********************************************************************
 	}
 	else{
 		if(isUrlValid){
-			if(!isOriginalUrlStored){
-				//stores the original url on the database
-				//gets the id of that location on the database
-				//stores a password based on the id's value
-			}
+
+			//stores the original url on the database
+			//gets the id of that location on the database
+			//stores a password based on the id's value
 			
 			//recover the password
 			//example of password:
@@ -60,10 +84,8 @@ http.createServer(function(req, res){
 }).listen(port);
 //*********************************************************************
 
-var dbUrl = 'mongodb://localhost:27017';
-var dbName = "test"
-var collection = null;
-	
+
+/*	
 var url = "www.google.com"
 	
 //connect with a database
@@ -135,7 +157,7 @@ MongoClient.connect(dbUrl, function(err, client){
 });
 
 
-
+*/
 
 
 
