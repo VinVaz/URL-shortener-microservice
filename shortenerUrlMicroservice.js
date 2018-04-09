@@ -10,7 +10,6 @@ var collection = null;
 
 //*********************************************************************
 http.createServer(function(req, res){
-  res.writeHead(200, {'Content-Type': 'text/plain'});
 
   const myPath = req.url.slice(1);
   const myHost = req.headers.host;
@@ -42,21 +41,29 @@ http.createServer(function(req, res){
           if(err) callback(err);
           if(doc.length!=0){
             var url = doc[0]["original"];
-            opn(url);
+            var html = `<script>window.open("${url}","_self")</script>`
+			callback(null, null, html);
           } 
           else{
             myMessage = {
 	          ERROR: "Short URL address not on the database"
             };
+			callback(null, myMessage);
           }
-        callback(null, myMessage);
         client.close();
         });
       }
       //wrap a function to response to work asynchronously
-      respond(function(err, data){
+      respond(function(err, data, html){
         if(err) console.log("Failed to find url address");
-        res.write(JSON.stringify(data));
+		if(html){
+			res.writeHead(200, {'Content-Type': 'text/html'});
+		    res.write(html);
+		}
+        else if(data){
+			res.writeHead(200, {'Content-Type': 'text/plain'});
+		    res.write(JSON.stringify(data));
+		}
         res.end();
       });
     });
@@ -88,13 +95,14 @@ http.createServer(function(req, res){
                 short_url:	shortUrl	
               }  
                 callback(null, myMessage);
-                client.close();
+				client.close();
             });
           });
         }
         respond(function(err, data){
           if(err) console.log("Failed to find message");
-          res.write(JSON.stringify(data));
+          res.writeHead(200, {'Content-Type': 'text/plain'});
+		  res.write(JSON.stringify(data));
           res.end();
         });		
         //*********************************************************************			
@@ -134,7 +142,7 @@ http.createServer(function(req, res){
         //puts a password key into a document
         function savePasswordOnDB(url, pass, callback){
           collection.updateOne({original: url}, {$set: {password: pass}}, {upsert: true}, function(err, data){
-            f(err) callback(err);
+            if(err) callback(err);
             callback(null, data);
           });
         }
@@ -146,7 +154,8 @@ http.createServer(function(req, res){
       myMessage = {
         ERROR: "Invalid URL address"
       }	
-    res.write(JSON.stringify(myMessage));
+    res.writeHead(200, {'Content-Type': 'text/plain'});
+	res.write(JSON.stringify(myMessage));
     res.end();
     }
   }
