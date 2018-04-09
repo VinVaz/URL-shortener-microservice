@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/VinVaz/URL-shortener-microservice#readme",
   "dependencies": {
-    "mongodb": "^3.0.5"
+    "mongodb": "^3.0.5",
+    "opn": "^5.3.0"
   }
 }
