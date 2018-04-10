@@ -1,38 +1,61 @@
-var http = require('http');
-var MongoClient = require("mongodb").MongoClient;
-var fs = require('fs');
+const http = require('http');
+const MongoClient = require("mongodb").MongoClient;
+const fs = require('fs');
+const path = require('path');
 var port = process.env.PORT || 8080;
 
 
 const dbUrl = 'mongodb://localhost:27017';
 const dbName = "test"
 var collection = null;
-var readStream = fs.createReadStream("frontPage.html");
 
 //*********************************************************************
 http.createServer(function(req, res){
-
-  const myPath = req.url.slice(1);
+  
+  var reqPath = req.url || "frontPage.html";
+  var ext = path.extname(reqPath);
+  var validExtensions = {
+        ".html" : "text/html",          
+        ".js": "application/javascript", 
+        ".css": "text/css",
+        ".txt": "text/plain",
+        ".jpg": "image/jpeg",
+        ".gif": "image/gif",
+        ".png": "image/png",
+        ".ico": "image/png"
+  };
+  var isValidExt = validExtensions[ext];
   const myHost = req.headers.host;
 	
   var myMessage = {};
   var isPasswordStored = false;
   
-  if(myPath==""){
-	  res.writeHead(200, {'Content-Type': 'text/html'});   
-	  readStream.pipe(res);
+  //serves the static page with the access to css for example
+  if(isValidExt){
+	  fileName = path.join(process.cwd(), reqPath);
+	  fs.open(fileName, 'r', function(err, fd){
+		  if(!err){
+			  	console.log("serving:" + fd);
+	        fs.readFile(fd, "binary", function(err, file){
+		      if(err) console.log("Error to read file")  
+	          res.setHeader('Content-Type', validExtensions[ext]);
+              res.statusCode = 200;	
+	          res.write(file, "binary");
+              res.end();		
+	        });  
+		  }
+	  })
   }
-
   //checks if the request is an original url or 
   //a path of some short url
   var urlValidation = /^http:[/][/]www[.][a-z]+[.]com/i;
   var passwordValidation = /^[a-z0-9]+$/;
-  var isUrlValid = urlValidation.test(myPath);
-  var isPasswordValid = passwordValidation.test(myPath);
+  var isUrlValid = urlValidation.test(reqPath.slice(1));
+  var isPasswordValid = passwordValidation.test(reqPath.slice(1));
 
   if(isPasswordValid){
   //*********************************************************************
-    var pass = myPath;
+    var pass = reqPath.slice(1);
     //Opens mongo connection:
     MongoClient.connect(dbUrl, function(err, client){
   
@@ -79,7 +102,7 @@ http.createServer(function(req, res){
     if(isUrlValid){
       //*********************************************************************
       //*********************************************************************			
-      var originalUrl = myPath; 
+      var originalUrl = reqPath.slice(1); 
 			
       //Opens mongo connection:
       MongoClient.connect(dbUrl, function(err, client){
@@ -87,6 +110,7 @@ http.createServer(function(req, res){
         if(err) console.log("failed to connect with database");
         const db = client.db("test")
         const collection = db.collection("kindofurls");
+		
         function respond(callback){	
           addUrlSavePassword(originalUrl, function(err, data){
             if(err) console.log("err")
@@ -113,12 +137,13 @@ http.createServer(function(req, res){
         //*********************************************************************			
         //**********************************************************************	
         function addUrlSavePassword(url, callback){
-
           addUrlOnceToDB(url, function(err, data){ 
             if(err) callback(err);
           });
           getIdFromUrl(url, function(err, id){
             if(err) callback(err);
+			//the short url address path will consist of the last 5 digits of the 
+			//id provided by the database for a specific web address			
             var password = id.toString().slice(-5);
 						
             savePasswordOnDB(url, password, function(err, data){
@@ -155,7 +180,7 @@ http.createServer(function(req, res){
       });
 	//End of mongo connection						
     }
-    else if(myPath!=""){
+    else if(!isValidExt){
       myMessage = {
         ERROR: "Invalid URL address"
       }	
