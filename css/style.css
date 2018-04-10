@@ -1,3 +1,20 @@
 body{
- background-color:#9483e9;
+ /*background-color:#9483e9;*/
+    margin-left: 20px;
+}
+p{
+	color: rgb(200, 42, 82);
+	background-color: rgb(249, 242, 244);
+	margin:0px;
+}
+.frame{
+	display: inline-block;
+	padding: 2px;
+	border-radius: 2px;
+	margin: 0px;
+}
+#userStories{
+	background-color: #eaeaea;
+	border-radius: 4px;
+	padding: 2px;
 }

@@ -7,19 +7,29 @@
 </head>
 <body>
   <h1>URl Shortener Microservice</h1>
-      <h3>User stories:</h3>
+  <div class="frame" id="userStories">
+    <h3>User stories:</h3>
       <ul>
         <li> I can pass a URL as a parameter and I will receive a shortened URL in the JSON Response.</li>
         <li> when I visit that shortened URL, it will redirect me to my origina link.</li>
       </ul>
+   </div> 
     <h2>Example creation usage:</h2>
+	 <div class="frame" id="example">
       <p> https://little-url.herokuapp.com/new/https://www.google.com</p>
       <p> https://little-url.herokuapp.com/new/http://foo.com:80</p> 
-    <h2>Example creation output:</h2>
+    </div>
+	<h2>Example creation output:</h2>
+	 <div class="frame" id="output">
       <p>{ "original_url":"http://foo.com:80", "short_url":"https://little-url.herokuapp.com/8170" }</p>
-    <h2>Usage:</h2>
+     </div>
+	<h2>Usage:</h2>
+	 <div class="frame" id="usage">
       <p>https://little-url.herokuapp.com/2871</p>
+	 </div>
     <h2>Will redirect to</h2> 
-      <p>https://www.google.com/</p>
+	 <div class="frame" id="redirect">
+	  <p>https://www.google.com/</p>
+	 </div> 
 </body>
 </html>
