@@ -12,7 +12,9 @@ var collection = null;
 //*********************************************************************
 http.createServer(function(req, res){
   
-  var reqPath = req.url || "frontPage.html";
+  var reqPath = (req.url=="/")? "/frontPage.html" : req.url;
+  
+  console.log(reqPath);
   var ext = path.extname(reqPath);
   var validExtensions = {
         ".html" : "text/html",          
@@ -35,7 +37,6 @@ http.createServer(function(req, res){
 	  fileName = path.join(process.cwd(), reqPath);
 	  fs.open(fileName, 'r', function(err, fd){
 		  if(!err){
-			  	console.log("serving:" + fd);
 	        fs.readFile(fd, "binary", function(err, file){
 		      if(err) console.log("Error to read file")  
 	          res.setHeader('Content-Type', validExtensions[ext]);
@@ -59,7 +60,7 @@ http.createServer(function(req, res){
     //Opens mongo connection:
     MongoClient.connect(dbUrl, function(err, client){
   
-      if(err) console.log("failed to connect with database");
+      if(err) console.log("Failed to connect with database");
       const db = client.db("test")
       const collection = db.collection("kindofurls");
 
@@ -74,7 +75,7 @@ http.createServer(function(req, res){
           } 
           else{
             myMessage = {
-	          ERROR: "Short URL address not on the database"
+	          ERROR: "Short URL address not in the database"
             };
 			callback(null, myMessage);
           }
@@ -107,13 +108,13 @@ http.createServer(function(req, res){
       //Opens mongo connection:
       MongoClient.connect(dbUrl, function(err, client){
 
-        if(err) console.log("failed to connect with database");
+        if(err) console.log("Failed to connect with database");
         const db = client.db("test")
         const collection = db.collection("kindofurls");
 		
         function respond(callback){	
           addUrlSavePassword(originalUrl, function(err, data){
-            if(err) console.log("err")
+            if(err) callback(err);
             collection.find({original: originalUrl}).toArray(function(err, data){
               if(err) callback(err);
 		  
