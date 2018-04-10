@@ -1,12 +1,13 @@
 var http = require('http');
 var MongoClient = require("mongodb").MongoClient;
-var opn = require("opn");
+var fs = require('fs');
 var port = process.env.PORT || 8080;
 
 
 const dbUrl = 'mongodb://localhost:27017';
 const dbName = "test"
 var collection = null;
+var readStream = fs.createReadStream("frontPage.html");
 
 //*********************************************************************
 http.createServer(function(req, res){
@@ -16,7 +17,11 @@ http.createServer(function(req, res){
 	
   var myMessage = {};
   var isPasswordStored = false;
-
+  
+  if(myPath==""){
+	  res.writeHead(200, {'Content-Type': 'text/html'});   
+	  readStream.pipe(res);
+  }
 
   //checks if the request is an original url or 
   //a path of some short url
@@ -150,7 +155,7 @@ http.createServer(function(req, res){
       });
 	//End of mongo connection						
     }
-    else{
+    else if(myPath!=""){
       myMessage = {
         ERROR: "Invalid URL address"
       }	
