@@ -2,7 +2,7 @@ const http = require('http');
 const MongoClient = require("mongodb").MongoClient;
 const fs = require('fs');
 const path = require('path');
-var port = 8080;
+var port = process.env.PORT || 8080;
 const dbuser = process.env.DB_USER;
 const dbpassword = process.env.DB_PASS;
 
