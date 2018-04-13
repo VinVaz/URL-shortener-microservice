@@ -3,18 +3,17 @@ const MongoClient = require("mongodb").MongoClient;
 const fs = require('fs');
 const path = require('path');
 var port = process.env.PORT || 8080;
+const dbuser = process.env.DB_USER;
+const dbpassword = process.env.DB_PASS;
 
-
-const dbUrl = 'mongodb://localhost:27017';
-const dbName = "test"
+const dbUrl = 'mongodb://'+dbuser+':'+dbpassword+'@ds014388.mlab.com:14388/myprotodata';
+const dbName = "myprotodata"
 var collection = null;
 
-//*********************************************************************
+
 http.createServer(function(req, res){
   
   var reqPath = (req.url=="/")? "/frontPage.html" : req.url;
-  
-  console.log(reqPath);
   var ext = path.extname(reqPath);
   var validExtensions = {
         ".html" : "text/html",          
@@ -32,7 +31,7 @@ http.createServer(function(req, res){
   var myMessage = {};
   var isPasswordStored = false;
   
-  //serves the static page with the access to css for example
+  //serves the static page with an access to css for example
   if(isValidExt){
 	  fileName = path.join(process.cwd(), reqPath);
 	  fs.open(fileName, 'r', function(err, fd){
@@ -55,13 +54,12 @@ http.createServer(function(req, res){
   var isPasswordValid = passwordValidation.test(reqPath.slice(1));
 
   if(isPasswordValid){
-  //*********************************************************************
     var pass = reqPath.slice(1);
     //Opens mongo connection:
     MongoClient.connect(dbUrl, function(err, client){
   
       if(err) console.log("Failed to connect with database");
-      const db = client.db("test")
+      const db = client.db(dbName)
       const collection = db.collection("kindofurls");
 
       //find the original url address through the password:
@@ -96,20 +94,18 @@ http.createServer(function(req, res){
         res.end();
       });
     });
-	//End of mongo connection
-    //*********************************************************************		
+	//End of mongo connection	
   }
   else{
     if(isUrlValid){
-      //*********************************************************************
-      //*********************************************************************			
+      //*********************************************************************		
       var originalUrl = reqPath.slice(1); 
 			
       //Opens mongo connection:
       MongoClient.connect(dbUrl, function(err, client){
 
         if(err) console.log("Failed to connect with database");
-        const db = client.db("test")
+        const db = client.db(dbName)
         const collection = db.collection("kindofurls");
 		
         function respond(callback){	
@@ -135,8 +131,7 @@ http.createServer(function(req, res){
 		  res.write(JSON.stringify(data));
           res.end();
         });		
-        //*********************************************************************			
-        //**********************************************************************	
+        //*********************************************************************				
         function addUrlSavePassword(url, callback){
           addUrlOnceToDB(url, function(err, data){ 
             if(err) callback(err);
@@ -153,8 +148,7 @@ http.createServer(function(req, res){
               client.close();					
             });
           });
-        }	
-        //**********************************************************************	
+        }		
         //insert original url address, only if it is not already on the database:
         function addUrlOnceToDB(url, callback){
           collection.updateOne({original: url}, {$set: {original: url}}, {upsert: true}, function(err, data){
@@ -176,8 +170,7 @@ http.createServer(function(req, res){
             if(err) callback(err);
             callback(null, data);
           });
-        }
-        //*********************************************************************		
+        }	
       });
 	//End of mongo connection						
     }
@@ -191,7 +184,7 @@ http.createServer(function(req, res){
     }
   }
 }).listen(port);
-//*********************************************************************
+
 
 
 
