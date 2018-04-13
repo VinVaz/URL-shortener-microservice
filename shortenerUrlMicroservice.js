@@ -48,7 +48,7 @@ http.createServer(function(req, res){
   }
   //checks if the request is an original url or 
   //a path of some short url
-  var urlValidation = /^http:[/][/]www[.][a-z]+[.]com/i;
+  var urlValidation = /^http[s]?:[/][/](?:www[.])?[a-z]+[.]com/i;
   var passwordValidation = /^[a-z0-9]+$/;
   var isUrlValid = urlValidation.test(reqPath.slice(1));
   var isPasswordValid = passwordValidation.test(reqPath.slice(1));
