@@ -2,7 +2,7 @@ const http = require('http');
 const MongoClient = require("mongodb").MongoClient;
 const fs = require('fs');
 const path = require('path');
-var port = process.env.PORT || 8080;
+var port = 8080;
 const dbuser = process.env.DB_USER;
 const dbpassword = process.env.DB_PASS;
 
@@ -48,7 +48,7 @@ http.createServer(function(req, res){
   }
   //checks if the request is an original url or 
   //a path of some short url
-  var urlValidation = /^http[s]?:[/][/](?:www[.])?[a-z]+[.]com/i;
+  var urlValidation = /^http([s]?):[/][/](?:www[.])?([a-z0-9]+)[.]com((?:[.][a-z][a-z])?)/i;
   var passwordValidation = /^[a-z0-9]+$/;
   var isUrlValid = urlValidation.test(reqPath.slice(1));
   var isPasswordValid = passwordValidation.test(reqPath.slice(1));
@@ -98,8 +98,9 @@ http.createServer(function(req, res){
   }
   else{
     if(isUrlValid){
-      //*********************************************************************		
-      var originalUrl = reqPath.slice(1); 
+      //*********************************************************************	
+      //adds "www" if the user didn't typed it	  
+      var originalUrl = reqPath.slice(1).replace(urlValidation, `http$1://www.$2.com$3`); 
 			
       //Opens mongo connection:
       MongoClient.connect(dbUrl, function(err, client){
