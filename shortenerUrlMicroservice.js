@@ -37,7 +37,10 @@ http.createServer(function(req, res){
 	  fs.open(fileName, 'r', function(err, fd){
 		  if(!err){
 	        fs.readFile(fd, "binary", function(err, file){
-		      if(err) console.log("Error to read file")  
+		      if(err){
+				res.writeHead(200, {'Content-Type': 'text/plain'});
+                res.end("Failed to load the request");  
+			  } 
 	          res.setHeader('Content-Type', validExtensions[ext]);
               res.statusCode = 200;	
 	          res.write(file, "binary");
@@ -105,7 +108,10 @@ http.createServer(function(req, res){
       //Opens mongo connection:
       MongoClient.connect(dbUrl, function(err, client){
 
-        if(err) console.log("Failed to connect with database");
+        if(err){
+				res.writeHead(200, {'Content-Type': 'text/plain'});
+                res.end("Failed to connect with the database");  
+		} 
         const db = client.db(dbName)
         const collection = db.collection("kindofurls");
 		
@@ -127,7 +133,10 @@ http.createServer(function(req, res){
           });
         }
         respond(function(err, data){
-          if(err) console.log("Failed to find message");
+          if(err){
+				res.writeHead(200, {'Content-Type': 'text/plain'});
+                res.end("Cannot access database");  
+			  } 
           res.writeHead(200, {'Content-Type': 'text/plain'});
 		  res.write(JSON.stringify(data));
           res.end();
