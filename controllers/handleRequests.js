@@ -1,17 +1,24 @@
 const path = require('path');
+const handleStaticFileRequest = require('./handleStaticFileRequest');
 
-const extensionChecker = (extension) => {
-  const validExtensions = {
-        '.html' : 'text/html',
-        '.js': 'application/javascript',
-        '.css': 'text/css',
-        '.txt': 'text/plain',
-        '.jpg': 'image/jpeg',
-        '.gif': 'image/gif',
-        '.png': 'image/png',
-        '.ico': 'image/png',
-  };
-  return validExtensions[extension];
+
+const getRequestType = (reqPath) => {
+  let requestType = '';
+  
+  if (validStaticExtention(reqPath)) {
+    requestType = "STACTIC_FILE_REQUEST";
+  }
+  else {
+    if (original_URL_Validation(reqPath)) {
+      requestType = "ORIGINAL_URL";
+    }
+    else {
+      if (shortened_URL_Validation(reqPath)) {
+        requestType = "SHORTENED_URL";
+      }
+    }
+  }
+  return requestType;
 }
 
 const validStaticExtention = (reqPath) => {
@@ -31,5 +38,18 @@ const shortened_URL_Validation = (reqPath) => {
   return is_Shortened_URL_Valid;
 }
 
+const extensionChecker = (extension) => {
+  const validExtensions = {
+        '.html' : 'text/html',
+        '.js': 'application/javascript',
+        '.css': 'text/css',
+        '.txt': 'text/plain',
+        '.jpg': 'image/jpeg',
+        '.gif': 'image/gif',
+        '.png': 'image/png',
+        '.ico': 'image/png',
+  };
+  return validExtensions[extension];
+}
 
-module.exports = { validStaticExtention, original_URL_Validation, shortened_URL_Validation };
+module.exports = { validStaticExtention, getRequestType };

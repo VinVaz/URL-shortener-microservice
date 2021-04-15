@@ -8,6 +8,7 @@ const dbpassword = process.env.DB_PASS;
 const dbUrl = 'mongodb://'+dbuser+':'+dbpassword+'@ds014388.mlab.com:14388/myprotodata';
 const dbName = 'myprotodata';
 
+
 const openShortenedUrl = (pass, req, res) => {
   MongoClient.connect(dbUrl, (err, client) => {
     if(err) {

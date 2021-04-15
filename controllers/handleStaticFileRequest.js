@@ -5,8 +5,6 @@ const { validStaticExtention } = require('./handleRequests');
 
 const handleStaticFileRequest = (reqPath, res) => {
   let validExtension = validStaticExtention(reqPath);
-  
-  if (validExtension) {
 	  
     validPath = path.join(process.cwd(), reqPath);
     fs.open(validPath, 'r', (err, fd) => {
@@ -23,8 +21,6 @@ const handleStaticFileRequest = (reqPath, res) => {
         })
       }
 	  })
-    
-  }
 }
 
 module.exports = handleStaticFileRequest;
