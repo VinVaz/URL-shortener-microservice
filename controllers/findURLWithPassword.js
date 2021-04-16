@@ -1,6 +1,7 @@
 
-//find the original url address through the password:
-const findURLWithShortened = (collection, pass, callback) => {
+//find the original url address using the password:
+const findURLWithPassword = (collection, pass, callback) => {
+  
   collection.find({password: pass}).toArray((err, doc) => {
     if (err) callback(err);
     if (doc.length!=0) {
@@ -15,7 +16,8 @@ const findURLWithShortened = (collection, pass, callback) => {
       callback(null, myMessage);
     }
   });
+  
 }
 
 
-module.exports = findURLWithShortened;
+module.exports = findURLWithPassword;
